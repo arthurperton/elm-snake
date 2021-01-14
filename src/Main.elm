@@ -35,16 +35,22 @@ type Object
     | Apple
 
 
-type alias Row =
-    Array Object
+
+-- type alias Object =
+--     { type_ : ObjectType
+--     , position : Pos
+--     }
+-- type alias Row =
+--     Array Object
 
 
 type alias Grid =
-    Array Row
+    Array (Array Object)
 
 
 type alias Model =
     { direction : Direction
+    , grid : Grid
     , length : Int
     , position : Pos
     , tick : Int
@@ -54,6 +60,8 @@ type alias Model =
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { direction = Right
+      , grid = Array.repeat 11 (Array.repeat 11 None) -- TODO configurable size
+      --   , objects = [ Object Snake (Pos 5 5) ]
       , length = 1
       , position = Pos 5 5
       , tick = 0
@@ -67,15 +75,14 @@ subscriptions model =
     Time.every 1000 Tick
 
 
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick _ ->
             ( { model | tick = model.tick + 1 }, Cmd.none )
 
 
+view : Model -> Html Msg
 view model =
     div [ style "background-color" "#fef" ]
-        [ button [] [ text "-" ]
-        , div [] [ text (String.fromInt model.tick) ]
-        , button [] [ text "+" ]
-        ]
+        (Array.toList (Array.map (\row -> div [] [ text "row"]) model.grid))
