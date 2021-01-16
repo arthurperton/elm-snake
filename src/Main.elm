@@ -2,8 +2,8 @@ module Main exposing (..)
 
 import Array exposing (Array)
 import Browser
-import Html exposing (Html, button, div, text)
-import Html.Attributes exposing (style)
+import Html exposing (Html, button, div, node, text)
+import Html.Attributes exposing (class, href, rel, style)
 import Html.Events exposing (onClick)
 import Time
 
@@ -35,35 +35,21 @@ type Object
     | Apple
 
 
-
--- type alias Object =
---     { type_ : ObjectType
---     , position : Pos
---     }
--- type alias Row =
---     Array Object
-
-
-type alias Grid =
-    Array (Array Object)
-
-
 type alias Model =
-    { direction : Direction
-    , grid : Grid
-    , length : Int
-    , position : Pos
+    { snakeDirection : Direction
+    , snakeHead : Pos
+    , snakeTail : List Pos
+    , food : Pos
     , tick : Int
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { direction = Right
-      , grid = Array.repeat 11 (Array.repeat 11 None) -- TODO configurable size
-      --   , objects = [ Object Snake (Pos 5 5) ]
-      , length = 1
-      , position = Pos 5 5
+    ( { snakeDirection = Right
+      , snakeHead = Pos 5 5
+      , snakeTail = []
+      , food = Pos 3 8
       , tick = 0
       }
     , Cmd.none
@@ -79,10 +65,36 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick _ ->
-            ( { model | tick = model.tick + 1 }, Cmd.none )
+            ( { model
+                | tick = model.tick + 1
+                , snakeHead = Pos (model.snakeHead.x + 1) model.snakeHead.y
+              }
+            , Cmd.none
+            )
 
 
 view : Model -> Html Msg
 view model =
-    div [ style "background-color" "#fef" ]
-        (Array.toList (Array.map (\row -> div [] [ text "row"]) model.grid))
+    div [ class "app" ]
+        [ node "link" [ rel "stylesheet", href "style.css" ] []
+        , div [ class "field" ]
+            [ snakeHead model.snakeHead
+
+            -- (List.head model.snake)
+            ]
+        ]
+
+
+stylePercent : Int -> String
+stylePercent coord =
+    String.fromInt (coord * 10) ++ "%"
+
+
+snakeHead : Pos -> Html Msg
+snakeHead pos =
+    div
+        [ class "snake snake-head"
+        , style "left" (stylePercent pos.x)
+        , style "top" (stylePercent pos.y)
+        ]
+        []
