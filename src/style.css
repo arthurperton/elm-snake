@@ -23,8 +23,6 @@ html, body {
 
 .snake {
     position: absolute;
-    width: 10%;
-    height: 10%;
     border-radius: 40%;
 }
 
