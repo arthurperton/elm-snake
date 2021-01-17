@@ -1,6 +1,5 @@
 module Main exposing (..)
 
-import Array exposing (Array)
 import Browser
 import Browser.Events exposing (onKeyDown)
 import Html exposing (Html, button, div, node, text)
@@ -16,6 +15,7 @@ main =
 
 type Msg
     = KeyPressed String
+    | MoveFood Pos
     | Tick Time.Posix
 
 
@@ -32,18 +32,14 @@ type alias Pos =
     }
 
 
-type Object
-    = None
-    | Snake
-    | Apple
-
-
 type alias Model =
     { food : Pos
     , size : Int
     , snakeDirection : Direction
+    , snakeIsDead : Bool
     , snakeHead : Pos
     , snakeTail : List Pos
+    , snakeTailLength : Int
     , tick : Int
     }
 
@@ -53,8 +49,10 @@ init _ =
     ( { food = Pos 3 8
       , size = 20
       , snakeDirection = Right
+      , snakeIsDead = False
       , snakeHead = Pos 5 5
-      , snakeTail = []
+      , snakeTail = [ Pos 4 5, Pos 3 5 ]
+      , snakeTailLength = 2
       , tick = 0
       }
     , Cmd.none
@@ -64,7 +62,7 @@ init _ =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Time.every 400 Tick
+        [ Time.every 300 Tick
         , onKeyDown keyDecoder
         ]
 
@@ -77,6 +75,9 @@ keyDecoder =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        KeyPressed "r" ->
+            init ()
+
         KeyPressed key ->
             case directionForKey key of
                 Just direction ->
@@ -85,13 +86,66 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
+        MoveFood pos ->
+            ( { model | food = pos }, Cmd.none )
+
         Tick _ ->
-            ( { model
-                | tick = model.tick + 1
-                , snakeHead = move model.snakeDirection model.snakeHead
-              }
-            , Cmd.none
-            )
+            tick model
+
+
+tick : Model -> ( Model, Cmd Msg )
+tick model =
+    let
+        snakeHead =
+            case model.snakeIsDead of
+                False ->
+                    move model.snakeHead model.snakeDirection
+
+                True ->
+                    model.snakeHead
+
+        snakeHasFood =
+            snakeHead == model.food
+
+        snakeIsDead =
+            model.snakeIsDead
+                || (snakeHead.x < 0)
+                || (snakeHead.y < 0)
+                || (snakeHead.x >= model.size)
+                || (snakeHead.y >= model.size)
+                || List.member snakeHead model.snakeTail
+
+        snakeTailLength =
+            case snakeHasFood of
+                False ->
+                    model.snakeTailLength
+
+                True ->
+                    model.snakeTailLength + 1
+
+        snakeTail =
+            case model.snakeIsDead of
+                False ->
+                    updateTail model.snakeHead model.snakeTail snakeTailLength
+
+                True ->
+                    model.snakeTail
+    in
+    ( { model
+        | tick = model.tick + 1
+        , snakeHead = snakeHead
+        , snakeIsDead = snakeIsDead
+        , snakeTail = snakeTail
+        , snakeTailLength = snakeTailLength
+      }
+    , Cmd.none
+    )
+
+
+
+updateTail : Pos -> List Pos -> Int -> List Pos
+updateTail head tail tailLength =
+    head :: List.take (tailLength - 1) tail
 
 
 directionForKey : String -> Maybe Direction
@@ -125,8 +179,8 @@ directionForKey key =
             Nothing
 
 
-move : Direction -> Pos -> Pos
-move dir pos =
+move : Pos -> Direction -> Pos
+move pos dir =
     case dir of
         Left ->
             Pos (pos.x - 1) pos.y
@@ -146,8 +200,11 @@ view model =
     div [ class "app" ]
         [ node "link" [ rel "stylesheet", href "style.css" ] []
         , div [ class "field" ]
-            [ snakeHead model.size model.snakeHead
-            ]
+            (viewFood model.size model.food
+                :: viewSnakeBlood model.size model.snakeHead model.snakeIsDead
+                :: viewSnakeHead model.size model.snakeHead
+                :: viewSnakeTail model.size model.snakeTail
+            )
         ]
 
 
@@ -156,10 +213,39 @@ stylePercent size value =
     String.fromFloat (toFloat value * 100 / toFloat size) ++ "%"
 
 
-snakeHead : Int -> Pos -> Html Msg
-snakeHead size pos =
+viewFood : Int -> Pos -> Html Msg
+viewFood size pos =
+    viewObject size pos "food"
+
+
+viewSnakeBlood : Int -> Pos -> Bool -> Html Msg
+viewSnakeBlood size pos isDead =
+    viewObject size
+        pos
+        ("snake snake-blood"
+            ++ (if isDead then
+                    " snake-blood-spilled"
+
+                else
+                    ""
+               )
+        )
+
+
+viewSnakeHead : Int -> Pos -> Html Msg
+viewSnakeHead size pos =
+    viewObject size pos "snake snake-head"
+
+
+viewSnakeTail : Int -> List Pos -> List (Html Msg)
+viewSnakeTail size tail =
+    List.map (\pos -> viewObject size pos "snake snake-tail") tail
+
+
+viewObject : Int -> Pos -> String -> Html Msg
+viewObject size pos class_ =
     div
-        [ class "snake snake-head"
+        [ class class_
         , style "left" (stylePercent size pos.x)
         , style "top" (stylePercent size pos.y)
         , style "width" (stylePercent size 1)

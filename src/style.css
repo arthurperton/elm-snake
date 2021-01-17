@@ -19,6 +19,17 @@ html, body {
     width: 60vh;
     height: 60vh;
     background-color: navajowhite;
+    border-width: 3vh; 
+    border-style: solid;
+    border-color:burlywood;
+}
+
+.food {
+    position: absolute;
+    border-radius: 50%;
+    /* background-color: rgb(237, 83, 36) ; */
+    /* background-color: orangered; */
+    background-color: tomato;
 }
 
 .snake {
@@ -28,8 +39,36 @@ html, body {
 
 .snake-head {
     background-color: sienna;
+    z-index: 2;
+    /* border-width: 0;
+    border-style: solid;
+    border-color: crimson;
+    transition: transform 2s ease-out, background-color 2s;
+    transform: scale(1.0); */
 }
+
+.snake-blood {
+    background-color: crimson;
+    border-radius: 50%;
+    transform: scale(1.0);
+    transition: transform 1.2s ease-out 0s;
+    z-index: 0;
+    opacity: 0;
+}
+
+.snake-blood-spilled {
+    transform: scale(1.7);
+    opacity: 1;
+}
+
+/* .snake-head-dead {
+    background-color: crimson;
+    border-radius: 50%;
+    transform: scale(1.5);
+    z-index: 0;
+} */
 
 .snake-tail {
     background-color: seagreen;
+    z-index: 1;
 }
