@@ -20,9 +20,15 @@ body {
 }
 
 .score {
-    margin-top: -5vh;
     font-size: 5vh;
+    height: 6vh;
 }
+
+.message {
+    font-size: 5vh;
+    height: 6vh;
+}
+
 
 .field {
     position: relative;

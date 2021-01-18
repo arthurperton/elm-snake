@@ -85,26 +85,27 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         KeyPressed " " ->
-            if model.phase == Ready then
-                ( { model | phase = Playing }, Cmd.none )
+            case model.phase of
+                Ready ->
+                    ( { model | phase = Playing }, Cmd.none )
 
-            else
-                ( model, Cmd.none )
+                Dead ->
+                    init ()
 
-        KeyPressed "r" ->
-            if model.phase == Dead then
-                init ()
-
-            else
-                ( model, Cmd.none )
+                _ ->
+                    ( model, Cmd.none )
 
         KeyPressed key ->
-            case directionForKey key of
-                Just direction ->
-                    ( { model | snakeDirection = direction }, Cmd.none )
+            if model.phase == Playing then
+                case directionForKey key of
+                    Just direction ->
+                        ( { model | snakeDirection = direction }, Cmd.none )
 
-                Nothing ->
-                    ( model, Cmd.none )
+                    Nothing ->
+                        ( model, Cmd.none )
+
+            else
+                ( model, Cmd.none )
 
         MoveFoodTo ( x, y ) ->
             ( { model | food = Pos x y }, Cmd.none )
@@ -117,29 +118,14 @@ tick : Model -> ( Model, Cmd Msg )
 tick model =
     let
         snakeHead =
-            if model.phase == Dead then
-                model.snakeHead
+            if model.phase == Playing then
+                move model.snakeHead model.snakeDirection
 
             else
-                move model.snakeHead model.snakeDirection
+                model.snakeHead
 
         snakeHasFood =
             snakeHead == model.food
-
-        phase =
-            if
-                model.phase
-                    == Playing
-                    || (snakeHead.x < 0)
-                    || (snakeHead.y < 0)
-                    || (snakeHead.x >= model.size)
-                    || (snakeHead.y >= model.size)
-                    || List.member snakeHead model.snakeTail
-            then
-                Dead
-
-            else
-                model.phase
 
         snakeTailLength =
             case snakeHasFood of
@@ -155,6 +141,22 @@ tick model =
 
             else
                 model.snakeTail
+
+        phase =
+            if
+                model.phase
+                    == Playing
+                    && ((snakeHead.x < 0)
+                            || (snakeHead.y < 0)
+                            || (snakeHead.x >= model.size)
+                            || (snakeHead.y >= model.size)
+                            || List.member snakeHead model.snakeTail
+                       )
+            then
+                Dead
+
+            else
+                model.phase
 
         cmd =
             case snakeHasFood of
@@ -182,12 +184,6 @@ randomCoords size =
 moveFood : Int -> Cmd Msg
 moveFood size =
     Random.generate MoveFoodTo (randomCoords size)
-
-
-
--- newNumber : Cmd Msg
--- newNumber =
---     Random.generate NewNumber oneToTen
 
 
 updateTail : Pos -> List Pos -> Int -> List Pos
@@ -253,7 +249,18 @@ view model =
                 :: viewSnakeHead model.size model.snakeHead
                 :: viewSnakeTail model.size model.snakeTail
             )
+        , div [ class "message" ] [ text (message model.phase) ]
         ]
+
+
+message : GamePhase -> String
+message phase =
+    case phase of
+        Ready ->
+            "Press space to start"
+
+        _ ->
+            ""
 
 
 stylePercent : Int -> Int -> String
@@ -290,13 +297,23 @@ viewSnakeTail size tail =
     List.map (\pos -> viewObject size pos "snake snake-tail") tail
 
 
+viewSnakeEyes : Int -> Pos -> Direction -> Html Msg
+viewSnakeEyes size pos direction =
+    viewObjectWithChildren size pos "snake snake-eyes" [ text "hi" ]
+
+
 viewObject : Int -> Pos -> String -> Html Msg
-viewObject size pos class_ =
+viewObject size pos className =
+    viewObjectWithChildren size pos className []
+
+
+viewObjectWithChildren : Int -> Pos -> String -> List (Html Msg) -> Html Msg
+viewObjectWithChildren size pos className children =
     div
-        [ class class_
+        [ class className
         , style "left" (stylePercent size pos.x)
         , style "top" (stylePercent size pos.y)
         , style "width" (stylePercent size 1)
         , style "height" (stylePercent size 1)
         ]
-        []
+        children
