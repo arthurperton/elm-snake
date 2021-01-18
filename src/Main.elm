@@ -6,6 +6,7 @@ import Html exposing (Html, button, div, node, text)
 import Html.Attributes exposing (class, href, rel, style)
 import Html.Events exposing (onClick)
 import Json.Decode exposing (Decoder, field, map, string)
+import Random
 import Time
 
 
@@ -15,7 +16,7 @@ main =
 
 type Msg
     = KeyPressed String
-    | MoveFood Pos
+    | MoveFoodTo ( Int, Int )
     | Tick Time.Posix
 
 
@@ -46,8 +47,11 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
+    let
+        size = 12
+    in
     ( { food = Pos 3 8
-      , size = 20
+      , size = size
       , snakeDirection = Right
       , snakeIsDead = False
       , snakeHead = Pos 5 5
@@ -55,14 +59,14 @@ init _ =
       , snakeTailLength = 2
       , tick = 0
       }
-    , Cmd.none
+    , moveFood size
     )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Time.every 300 Tick
+        [ Time.every 200 Tick
         , onKeyDown keyDecoder
         ]
 
@@ -86,8 +90,8 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
-        MoveFood pos ->
-            ( { model | food = pos }, Cmd.none )
+        MoveFoodTo ( x, y ) ->
+            ( { model | food = Pos x y }, Cmd.none )
 
         Tick _ ->
             tick model
@@ -130,6 +134,14 @@ tick model =
 
                 True ->
                     model.snakeTail
+
+        cmd =
+            case snakeHasFood of
+                False ->
+                    Cmd.none
+
+                True ->
+                    moveFood model.size
     in
     ( { model
         | tick = model.tick + 1
@@ -138,9 +150,24 @@ tick model =
         , snakeTail = snakeTail
         , snakeTailLength = snakeTailLength
       }
-    , Cmd.none
+    , cmd
     )
 
+
+randomCoords : Int -> Random.Generator ( Int, Int )
+randomCoords size =
+    Random.pair (Random.int 0 (size - 1)) (Random.int 0 (size - 1))
+
+
+moveFood : Int -> Cmd Msg
+moveFood size =
+    Random.generate MoveFoodTo (randomCoords size)
+
+
+
+-- newNumber : Cmd Msg
+-- newNumber =
+--     Random.generate NewNumber oneToTen
 
 
 updateTail : Pos -> List Pos -> Int -> List Pos
@@ -199,6 +226,7 @@ view : Model -> Html Msg
 view model =
     div [ class "app" ]
         [ node "link" [ rel "stylesheet", href "style.css" ] []
+        , div [ class "score" ] [ text (String.fromInt (model.snakeTailLength - 2))]
         , div [ class "field" ]
             (viewFood model.size model.food
                 :: viewSnakeBlood model.size model.snakeHead model.snakeIsDead

@@ -5,13 +5,23 @@ html, body {
     height: 100%;
 }
 
+body {
+    font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
+}
+
 .app {
     width: 100%;
     height: 100%; 
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     background-color: aliceblue;
+}
+
+.score {
+    margin-top: -5vh;
+    font-size: 5vh;
 }
 
 .field {
@@ -27,9 +37,8 @@ html, body {
 .food {
     position: absolute;
     border-radius: 50%;
-    /* background-color: rgb(237, 83, 36) ; */
-    /* background-color: orangered; */
     background-color: tomato;
+    z-index: 1;
 }
 
 .snake {
@@ -40,18 +49,13 @@ html, body {
 .snake-head {
     background-color: sienna;
     z-index: 2;
-    /* border-width: 0;
-    border-style: solid;
-    border-color: crimson;
-    transition: transform 2s ease-out, background-color 2s;
-    transform: scale(1.0); */
 }
 
 .snake-blood {
     background-color: crimson;
     border-radius: 50%;
-    transform: scale(1.0);
-    transition: transform 1.2s ease-out 0s;
+    transform: scale(1.2);
+    transition: transform 1.2s ease-out .2s;
     z-index: 0;
     opacity: 0;
 }
@@ -60,13 +64,6 @@ html, body {
     transform: scale(1.7);
     opacity: 1;
 }
-
-/* .snake-head-dead {
-    background-color: crimson;
-    border-radius: 50%;
-    transform: scale(1.5);
-    z-index: 0;
-} */
 
 .snake-tail {
     background-color: seagreen;
