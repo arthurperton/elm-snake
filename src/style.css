@@ -55,7 +55,7 @@ body {
     background-color: crimson;
     border-radius: 50%;
     transform: scale(1.2);
-    transition: transform 1.2s ease-out .2s;
+    transition: transform 1.2s ease-out 0s;
     z-index: 0;
     opacity: 0;
 }

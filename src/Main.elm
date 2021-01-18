@@ -20,6 +20,12 @@ type Msg
     | Tick Time.Posix
 
 
+type GamePhase
+    = Ready
+    | Playing
+    | Dead
+
+
 type Direction
     = Left
     | Right
@@ -35,29 +41,28 @@ type alias Pos =
 
 type alias Model =
     { food : Pos
+    , phase : GamePhase
     , size : Int
     , snakeDirection : Direction
-    , snakeIsDead : Bool
     , snakeHead : Pos
     , snakeTail : List Pos
     , snakeTailLength : Int
-    , tick : Int
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     let
-        size = 12
+        size =
+            12
     in
     ( { food = Pos 3 8
+      , phase = Ready
       , size = size
       , snakeDirection = Right
-      , snakeIsDead = False
       , snakeHead = Pos 5 5
       , snakeTail = [ Pos 4 5, Pos 3 5 ]
       , snakeTailLength = 2
-      , tick = 0
       }
     , moveFood size
     )
@@ -79,8 +84,19 @@ keyDecoder =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        KeyPressed " " ->
+            if model.phase == Ready then
+                ( { model | phase = Playing }, Cmd.none )
+
+            else
+                ( model, Cmd.none )
+
         KeyPressed "r" ->
-            init ()
+            if model.phase == Dead then
+                init ()
+
+            else
+                ( model, Cmd.none )
 
         KeyPressed key ->
             case directionForKey key of
@@ -101,23 +117,29 @@ tick : Model -> ( Model, Cmd Msg )
 tick model =
     let
         snakeHead =
-            case model.snakeIsDead of
-                False ->
-                    move model.snakeHead model.snakeDirection
+            if model.phase == Dead then
+                model.snakeHead
 
-                True ->
-                    model.snakeHead
+            else
+                move model.snakeHead model.snakeDirection
 
         snakeHasFood =
             snakeHead == model.food
 
-        snakeIsDead =
-            model.snakeIsDead
-                || (snakeHead.x < 0)
-                || (snakeHead.y < 0)
-                || (snakeHead.x >= model.size)
-                || (snakeHead.y >= model.size)
-                || List.member snakeHead model.snakeTail
+        phase =
+            if
+                model.phase
+                    == Playing
+                    || (snakeHead.x < 0)
+                    || (snakeHead.y < 0)
+                    || (snakeHead.x >= model.size)
+                    || (snakeHead.y >= model.size)
+                    || List.member snakeHead model.snakeTail
+            then
+                Dead
+
+            else
+                model.phase
 
         snakeTailLength =
             case snakeHasFood of
@@ -128,12 +150,11 @@ tick model =
                     model.snakeTailLength + 1
 
         snakeTail =
-            case model.snakeIsDead of
-                False ->
-                    updateTail model.snakeHead model.snakeTail snakeTailLength
+            if model.phase == Playing then
+                updateTail model.snakeHead model.snakeTail snakeTailLength
 
-                True ->
-                    model.snakeTail
+            else
+                model.snakeTail
 
         cmd =
             case snakeHasFood of
@@ -144,9 +165,8 @@ tick model =
                     moveFood model.size
     in
     ( { model
-        | tick = model.tick + 1
+        | phase = phase
         , snakeHead = snakeHead
-        , snakeIsDead = snakeIsDead
         , snakeTail = snakeTail
         , snakeTailLength = snakeTailLength
       }
@@ -226,10 +246,10 @@ view : Model -> Html Msg
 view model =
     div [ class "app" ]
         [ node "link" [ rel "stylesheet", href "style.css" ] []
-        , div [ class "score" ] [ text (String.fromInt (model.snakeTailLength - 2))]
+        , div [ class "score" ] [ text (String.fromInt (model.snakeTailLength - 2)) ]
         , div [ class "field" ]
             (viewFood model.size model.food
-                :: viewSnakeBlood model.size model.snakeHead model.snakeIsDead
+                :: viewSnakeBlood model.size model.snakeHead (model.phase == Dead)
                 :: viewSnakeHead model.size model.snakeHead
                 :: viewSnakeTail model.size model.snakeTail
             )
