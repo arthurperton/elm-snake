@@ -57,6 +57,31 @@ body {
     z-index: 2;
 }
 
+.snake-eyes {
+    z-index: 3;
+    display: flex;
+    justify-content: space-around;
+    transform: rotate(0deg);
+}
+
+.snake-eye {
+    margin: 5%;
+    display: flex;
+    justify-content: center;
+    width: 40%;
+    height: 40%;
+    background-color: whitesmoke;
+    border-radius: 50%;
+    transform: scaleX(0.8)
+}
+
+.snake-eye-iris {
+    width: 70%;
+    height: 70%;
+    background-color:steelblue;
+    border-radius: 50%;
+}
+
 .snake-blood {
     background-color: crimson;
     border-radius: 50%;

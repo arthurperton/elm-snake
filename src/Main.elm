@@ -2,14 +2,14 @@ module Main exposing (..)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
-import Html exposing (Html, button, div, node, text)
+import Html exposing (Html, div, node, text)
 import Html.Attributes exposing (class, href, rel, style)
-import Html.Events exposing (onClick)
 import Json.Decode exposing (Decoder, field, map, string)
 import Random
 import Time
 
 
+main : Program () Model Msg
 main =
     Browser.element { init = init, update = update, view = view, subscriptions = subscriptions }
 
@@ -69,7 +69,7 @@ init _ =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.batch
         [ Time.every 200 Tick
         , onKeyDown keyDecoder
@@ -128,12 +128,11 @@ tick model =
             snakeHead == model.food
 
         snakeTailLength =
-            case snakeHasFood of
-                False ->
-                    model.snakeTailLength
+            if snakeHasFood then
+                model.snakeTailLength + 1
 
-                True ->
-                    model.snakeTailLength + 1
+            else
+                model.snakeTailLength
 
         snakeTail =
             if model.phase == Playing then
@@ -159,12 +158,11 @@ tick model =
                 model.phase
 
         cmd =
-            case snakeHasFood of
-                False ->
-                    Cmd.none
+            if snakeHasFood then
+                moveFood model.size
 
-                True ->
-                    moveFood model.size
+            else
+                Cmd.none
     in
     ( { model
         | phase = phase
@@ -247,6 +245,7 @@ view model =
             (viewFood model.size model.food
                 :: viewSnakeBlood model.size model.snakeHead (model.phase == Dead)
                 :: viewSnakeHead model.size model.snakeHead
+                :: viewSnakeEyes model.size model.snakeHead model.snakeDirection
                 :: viewSnakeTail model.size model.snakeTail
             )
         , div [ class "message" ] [ text (message model.phase) ]
@@ -297,9 +296,16 @@ viewSnakeTail size tail =
     List.map (\pos -> viewObject size pos "snake snake-tail") tail
 
 
+viewSnakeEye : Html Msg
+viewSnakeEye =
+    div [ class "snake-eye" ]
+        [ div [ class "snake-eye-iris" ] []
+        ]
+
+
 viewSnakeEyes : Int -> Pos -> Direction -> Html Msg
-viewSnakeEyes size pos direction =
-    viewObjectWithChildren size pos "snake snake-eyes" [ text "hi" ]
+viewSnakeEyes size pos _ =
+    viewObjectWithChildren size pos "snake snake-eyes" [ viewSnakeEye, viewSnakeEye ]
 
 
 viewObject : Int -> Pos -> String -> Html Msg
