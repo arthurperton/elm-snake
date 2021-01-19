@@ -1,0 +1,102 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
+}
+
+.app {
+    width: 100%;
+    height: 100%; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: aliceblue;
+}
+
+.score {
+    font-size: 5vh;
+    height: 6vh;
+}
+
+.message {
+    font-size: 5vh;
+    height: 6vh;
+}
+
+
+.field {
+    position: relative;
+    width: 60vh;
+    height: 60vh;
+    background-color: navajowhite;
+    border-width: 3vh; 
+    border-style: solid;
+    border-color:burlywood;
+}
+
+.food {
+    position: absolute;
+    border-radius: 50%;
+    background-color: tomato;
+    z-index: 1;
+}
+
+.snake {
+    position: absolute;
+    border-radius: 40%;
+}
+
+.snake-head {
+    background-color: sienna;
+    z-index: 2;
+}
+
+.snake-eyes {
+    z-index: 3;
+    display: flex;
+    justify-content: space-around;
+    transform: rotate(0deg);
+}
+
+.snake-eye {
+    margin: 5%;
+    display: flex;
+    justify-content: center;
+    width: 40%;
+    height: 40%;
+    background-color: whitesmoke;
+    border-radius: 50%;
+    transform: scaleX(0.8)
+}
+
+.snake-eye-iris {
+    width: 70%;
+    height: 70%;
+    background-color:steelblue;
+    border-radius: 50%;
+}
+
+.snake-blood {
+    background-color: crimson;
+    border-radius: 50%;
+    transform: scale(1.2);
+    transition: transform 1.2s ease-out 0s;
+    z-index: 0;
+    opacity: 0;
+}
+
+.snake-blood-spilled {
+    transform: scale(1.7);
+    opacity: 1;
+}
+
+.snake-tail {
+    background-color: seagreen;
+    z-index: 1;
+}
