@@ -8,3 +8,5 @@ package-lock.json
 # misc
 bin/
 _site
+# mac
+.DS_Store
